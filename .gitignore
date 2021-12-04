@@ -1,2 +1,4 @@
 data/**/*.png
 data/**/*.jpg
+data/*.zip
+*.ipynb

@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from utils import Attention_block, RRCNN_block, up_conv
+from .utils import Attention_block, RRCNN_block, up_conv
 
 class R2AttU_Net(nn.Module):
     def __init__(self,img_ch=3,output_ch=1,t=2):

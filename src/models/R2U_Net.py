@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from utils import RRCNN_block, up_conv
+from .utils import RRCNN_block, up_conv
 
 class R2U_Net(nn.Module):
     def __init__(self,img_ch=3,output_ch=1,t=2):

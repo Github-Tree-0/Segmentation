@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
-from utils import conv_block, up_conv
+# from . import utils
+from .utils import conv_block, up_conv
 
 class U_Net(nn.Module):
     def __init__(self,img_ch=3,output_ch=1):
