@@ -29,9 +29,10 @@ for epoch in tqdm(range(EPOCHS)):
     for it in range(iters):
         inp, gt = train_data[it]
         optimizer.zero_grad()
-        import ipdb;ipdb.set_trace()
-        # pred = model(inp)
-        # loss = criterion(pred, gt)
+        # import ipdb;ipdb.set_trace()
+        # TODO: Adapt input to U-net.
+        pred = model(inp)
+        loss = criterion(pred, gt)
         loss.backward()
         optimizer.step()
         cr_loss += loss.detach()
