@@ -19,6 +19,9 @@ class URISC(Dataset):
         self.augmentation = augmentation
         self.filenames = [os.path.join(path, mode, filename) for filename in os.listdir(os.path.join(path, mode))]
 
+    def __len__(self):
+        return len(self.filenames)
+
     def __getitem__(self, item):
         image = Image.open(self.filenames[item])
         if self.mode == "test":
