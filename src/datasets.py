@@ -28,7 +28,7 @@ class URISC(Dataset):
             if self.transform is not None:
                 image = self.transform(image)
             return self.filenames[item], image
-        label_path = self.filenames[item].replace(self.mode, "labels")
+        label_path = self.filenames[item].replace(self.mode, "label")
         label = Image.open(label_path)
         if self.mode == "val":
             if self.transform is not None:

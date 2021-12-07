@@ -4,3 +4,4 @@ cv2
 torch
 torchvision
 tqdm
+albumentations[imgaug]
