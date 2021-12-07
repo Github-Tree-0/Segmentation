@@ -5,6 +5,7 @@ import random
 import torch
 from torch.utils.data import Dataset
 from augment import strong_aug
+from utils.img_tool import *
 
 TRAIN_SHAPE = [(1024, 1024), (1024, 1024)]
 VALID_SHAPE = [(1024, 1024), (1024, 1024)]
@@ -22,22 +23,27 @@ class URISC(Dataset):
     def __len__(self):
         return len(self.filenames)
 
-    def __getitem__(self, item):
-        image = Image.open(self.filenames[item])
+    def __getitem__(self, item, count=16):
+        im = image_read(self.filenames[item])
         if self.mode == "test":
             if self.transform is not None:
-                image = self.transform(image)
-            return self.filenames[item], image
+                im = self.transform(im)
+            return self.filenames[item], im.unsqueeze(0)
         label_path = self.filenames[item].replace(self.mode, "label")
-        label = Image.open(label_path)
+        lab = image_read(label_path)
         if self.mode == "val":
             if self.transform is not None:
-                image = self.transform(image)
-            return image, self.__mask_transform(label)
+                im = self.transform(im)
+            return im.unsqueeze(0), self.__mask_transform(lab).unsqueeze(0)
 
         if self.augmentation:
-            p = strong_aug(p=.8, crop_size = TRAIN_SHAPE[0])
-            image, label = p(image,label)
+            image, label = [], []
+            for _ in range(count):
+                p = strong_aug(p=.8, crop_size = TRAIN_SHAPE[0])
+                res = p(image=np.array(im),mask=np.array(lab))
+                image.append(res['image'].transpose((2, 0, 1)))
+                label.append(res['mask'].transpose((2, 0, 1)))
+            image = np.array(image);label=np.array(label)
 
         if self.transform is not None:
             # convert Image to torch, normalize pixel intensity from [0, 255] to [0, 1]
@@ -48,15 +54,15 @@ class URISC(Dataset):
             image = image * random.uniform(0.9, 1.1)
 
         # cropping
-        h, w = image.shape[1], image.shape[2]
+        h, w = image.shape[-2], image.shape[-1]
         x = random.randint(0, w - self.crop_size)
         y = random.randint(0, h - self.crop_size)
-        image = image[:, y:y+self.crop_size, x:x+self.crop_size]
-        label = label[:, y:y+self.crop_size, x:x+self.crop_size]
+        image = image[..., y:y+self.crop_size, x:x+self.crop_size]
+        label = label[..., y:y+self.crop_size, x:x+self.crop_size]
         return image, label
 
     def __mask_transform(self, mask):
-        mask = torch.from_numpy(np.array(mask)).float().unsqueeze(0)
+        mask = torch.from_numpy(np.array(mask)).float()
         mask[mask == 255] = 1.0
         return mask
 

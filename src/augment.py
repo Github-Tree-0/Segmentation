@@ -15,6 +15,7 @@ from albumentations import (
 def strong_aug(p=0.5, crop_size=(512, 512)):
     return Compose([
         RandomResizedCrop(crop_size[0], crop_size[1], scale=(0.3, 1.0), ratio=(0.75, 1.3), interpolation=4, p=1.0),
+        Compose([
         RandomRotate90(),
         Flip(),
         Transpose(),
@@ -49,5 +50,5 @@ def strong_aug(p=0.5, crop_size=(512, 512)):
             RandomFog(p=0.5, fog_coef_lower=0.3, fog_coef_upper=0.5, alpha_coef=0.1)
         ], p=0.3),
         RGBShift(),
-        HueSaturationValue(p=0.9),
-    ], p=p)
+        HueSaturationValue(p=0.9),],p=p)
+    ], p=1)
