@@ -16,9 +16,9 @@ EPOCHS = 2000
 writer = SummaryWriter('../log/')
 save_path = '../checkpoints/'
 path = '../data/complex/'
-train_data = URISC(path, mode="train",crop_size=572, augmentation=True,transform=torch.Tensor)
+train_data = URISC(path, mode="train",crop_size=2012, augmentation=True,transform=torch.Tensor)
 val_data = URISC(path, mode='val')
-model = U_Net.U_Net(output_ch=1)
+model = U_Net.U_Net(img_ch=1,output_ch=1)
 model = model.cuda(device=0)
 criterion = loss.dice_loss()
 optimizer = optim.Adam(model.parameters(),lr=1e-4)
@@ -29,6 +29,7 @@ for epoch in tqdm(range(EPOCHS)):
     for it in range(iters):
         inp, gt = train_data[it]
         inp = inp.cuda(device=0);gt=gt.cuda(device=0)
+        # This should be included in the file.
         optimizer.zero_grad()
         # import ipdb;ipdb.set_trace()
         # TODO: Adapt input to U-net.
