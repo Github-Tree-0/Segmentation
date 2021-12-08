@@ -6,7 +6,7 @@ from torchvision import transforms
 from .utils import conv_block, up_conv
 
 class U_Net(nn.Module):
-    def __init__(self,img_ch=3,output_ch=2):
+    def __init__(self,img_ch=1,output_ch=2):
         super(U_Net,self).__init__()
         
         self.Maxpool = nn.MaxPool2d(kernel_size=2,stride=2)

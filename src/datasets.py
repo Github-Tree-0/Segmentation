@@ -11,14 +11,15 @@ TRAIN_SHAPE = [(1024, 1024), (1024, 1024)]
 VALID_SHAPE = [(1024, 1024), (1024, 1024)]
 
 class URISC(Dataset):
-    def __init__(self, path, mode="train", transform=None, crop_size=960, augmentation=False):
+    def __init__(self, args, mode="train"):
         super(URISC, self).__init__()
-        self.path = path
+        self.path = args.path
         self.mode = mode
-        self.transform = transform
-        self.crop_size = crop_size
-        self.augmentation = augmentation
+        self.transform = args.transform # None
+        self.crop_size = args.crop_size # 960
+        self.augmentation = args.augmentation # False
         self.filenames = [os.path.join(path, mode, filename) for filename in os.listdir(os.path.join(path, mode))]
+        self.device = args.device_num
 
     def __len__(self):
         return len(self.filenames)
