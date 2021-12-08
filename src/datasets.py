@@ -7,8 +7,9 @@ from torch.utils.data import Dataset
 from augment import strong_aug
 from utils.img_tool import *
 
-TRAIN_SHAPE = [(1024, 1024), (1024, 1024)]
-VALID_SHAPE = [(1024, 1024), (1024, 1024)]
+MAC_SIZE = 2200
+TRAIN_SHAPE = [(MAC_SIZE, MAC_SIZE), (MAC_SIZE, MAC_SIZE)]
+VALID_SHAPE = [(MAC_SIZE, MAC_SIZE), (MAC_SIZE, MAC_SIZE)]
 
 class URISC(Dataset):
     def __init__(self, args, mode="train"):
@@ -24,7 +25,7 @@ class URISC(Dataset):
     def __len__(self):
         return len(self.filenames)
 
-    def __getitem__(self, item, count=16):
+    def __getitem__(self, item, count=1):
         im = image_read(self.filenames[item])
         if self.mode == "test":
             if self.transform is not None:
@@ -58,8 +59,8 @@ class URISC(Dataset):
         h, w = image.shape[-2], image.shape[-1]
         x = random.randint(0, w - self.crop_size)
         y = random.randint(0, h - self.crop_size)
-        image = image[..., y:y+self.crop_size, x:x+self.crop_size]
-        label = label[..., y:y+self.crop_size, x:x+self.crop_size]
+        image = image[:,[0], y:y+self.crop_size, x:x+self.crop_size]
+        label = label[:,[0], y:y+self.crop_size, x:x+self.crop_size]
         return image, label
 
     def __mask_transform(self, mask):
