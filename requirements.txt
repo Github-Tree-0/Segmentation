@@ -1,6 +1,6 @@
 matplotlib
 numpy
-cv2
+opencv-python
 torch
 torchvision
 tqdm

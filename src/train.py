@@ -34,7 +34,7 @@ for epoch in tqdm(range(EPOCHS)):
         # TODO: Adapt input to U-net.
         print(inp.shape,gt.shape)
         pred = model(inp)
-        gt_cropped=transforms.CenterCrop(pred.detach().shape)(gt)
+        gt_cropped=transforms.CenterCrop(pred.detach().shape[-2:])(gt)
         loss = criterion(pred, gt_cropped)
         loss.backward()
         optimizer.step()
