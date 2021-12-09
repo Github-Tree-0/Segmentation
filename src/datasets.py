@@ -5,6 +5,7 @@ import random
 import torch
 from torch.utils.data import Dataset
 from augment import strong_aug
+import re
 from utils.img_tool import *
 
 # MAC_SIZE = 2200
@@ -24,54 +25,77 @@ class URISC(Dataset):
         self.mac_size = args.mac_size
         self.train_shape = [(self.mac_size, self.mac_size), (self.mac_size, self.mac_size)]
         self.val_shape = [(self.mac_size, self.mac_size), (self.mac_size, self.mac_size)]
-        self.batch_size = args.batch_size
+        self.repeat = args.repeat
         
     def __len__(self):
         return len(self.filenames)
 
     def __getitem__(self, item):
         im = image_read(self.filenames[item])
+        label_path = re.sub(r'(complex/)', r'\1label/', self.filenames[item])
+        lab = image_read(label_path)
+        
         if self.mode == "test":
             if self.transform is not None:
                 im = self.transform(im)
             return self.filenames[item], im.unsqueeze(0)
-        label_path = self.filenames[item].replace(self.mode, "label")
-        lab = image_read(label_path)
+        
         if self.mode == "val":
             if self.transform is not None:
                 im = self.transform(im)
-            return im.unsqueeze(0), self.__mask_transform(lab).unsqueeze(0)
+            image = np.array([im.transpose((2, 0, 1))])
+            label = np.array([lab.transpose((2, 0, 1))])
+            
+            image = self.__image_transform(image)
+            label = self.__mask_transform(label)
+            
+            # Cropping (Remove or replace it)
+            h, w = image.shape[-2], image.shape[-1]
+            x = random.randint(0, w - self.crop_size)
+            y = random.randint(0, h - self.crop_size)
+            image = image[:,[0], y:y+self.crop_size, x:x+self.crop_size]
+            label = label[:,[0], y:y+self.crop_size, x:x+self.crop_size]
 
-        if self.augmentation:
-            image, label = [], []
-            for _ in range(self.batch_size):
-                p = strong_aug(p=.8, crop_size=self.train_shape[0])
-                res = p(image=np.array(im),mask=np.array(lab))
-                image.append(res['image'].transpose((2, 0, 1)))
-                label.append(res['mask'].transpose((2, 0, 1)))
-            image = np.array(image);label=np.array(label)
+            image = image.cuda(device=self.device)
+            label = label.cuda(device=self.device)
 
-        if self.transform is not None:
-            # convert Image to torch, normalize pixel intensity from [0, 255] to [0, 1]
-            image = self.transform(image)
+            return image, label
+            
         
-        image = self.__image_transform(image)
-        label = self.__mask_transform(label)
+        if self.mode == "train":
+            if self.augmentation:
+                image, label = [], []
+                for _ in range(self.repeat):
+                    p = strong_aug(p=.8, crop_size=self.train_shape[0])
+                    res = p(image=np.array(im),mask=np.array(lab))
+                    image.append(res['image'].transpose((2, 0, 1)))
+                    label.append(res['mask'].transpose((2, 0, 1)))
+                image = np.array(image);label=np.array(label)
+            else:
+                image = np.array([im.transpose((2, 0, 1))])
+                label = np.array([lab.transpose((2, 0, 1))])
 
-        if random.random() < 0.5:
-            image = image * random.uniform(0.9, 1.1)
+            if self.transform is not None:
+                # convert Image to torch, normalize pixel intensity from [0, 255] to [0, 1]
+                image = self.transform(image)
 
-        # cropping
-        h, w = image.shape[-2], image.shape[-1]
-        x = random.randint(0, w - self.crop_size)
-        y = random.randint(0, h - self.crop_size)
-        image = image[:,[0], y:y+self.crop_size, x:x+self.crop_size]
-        label = label[:,[0], y:y+self.crop_size, x:x+self.crop_size]
-        
-        image = image.cuda(device=self.device)
-        label = label.cuda(device=self.device)
-        
-        return image, label
+            image = self.__image_transform(image)
+            label = self.__mask_transform(label)
+
+            if random.random() < 0.5:
+                image = image * random.uniform(0.9, 1.1)
+
+            # cropping
+            h, w = image.shape[-2], image.shape[-1]
+            x = random.randint(0, w - self.crop_size)
+            y = random.randint(0, h - self.crop_size)
+            image = image[:,[0], y:y+self.crop_size, x:x+self.crop_size]
+            label = label[:,[0], y:y+self.crop_size, x:x+self.crop_size]
+
+            image = image.cuda(device=self.device)
+            label = label.cuda(device=self.device)
+
+            return image, label
 
     def __mask_transform(self, mask):
         mask = torch.from_numpy(np.array(mask)).float()

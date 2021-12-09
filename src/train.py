@@ -3,7 +3,7 @@ import numpy as np
 import os
 import cv2
 import torch
-import loss
+import Loss
 from datasets import URISC
 from models import U_Net
 import torch.optim as optim
@@ -15,13 +15,13 @@ from Options import options
 # EPOCHS = 2000
 def train(args):
     writer = SummaryWriter(args.log_dir) # '../log/'
-    save_path = args.save_path # '../checkpoints/'
+    save_dir = args.save_dir # '../checkpoints/'
     path = args.path # '../data/complex/'
-    train_data = URISC(path, mode='train', augmentation=True)
-    val_data = URISC(path, mode='val')
+    train_data = URISC(args, mode='train')
+    val_data = URISC(args, mode='val')
     model = U_Net.U_Net(output_ch=1)
     model = model.cuda(device=args.device) # 0
-    criterion = loss.dice_loss()
+    criterion = Loss.dice_loss()
     optimizer = optim.Adam(model.parameters(),lr=args.lr) # 1e-4
     iters = len(train_data)
     min_loss_val = args.min_loss_val # 1e9
@@ -36,7 +36,7 @@ def train(args):
             # import ipdb;ipdb.set_trace()
             # TODO: Adapt input to U-net.
             pred = model(inp)
-            gt_cropped=transforms.CenterCrop(pred.detach().shape[-2:])(gt)
+            gt_cropped = transforms.CenterCrop(pred.detach().shape[-2:])(gt)
             loss = criterion(pred, gt_cropped)
             loss.backward()
             optimizer.step()
@@ -50,13 +50,17 @@ def train(args):
             cr_val = 0
             with torch.no_grad():
                 for it in range(len(val_data)):
-                    inp,  criterion(pred, gt)
+                    inp, gt = val_data[it]
+                    pred = model(inp)
+                    gt_cropped=transforms.CenterCrop(pred.detach().shape[-2:])(gt)
+                    loss = criterion(pred, gt_cropped)
                     cr_val += loss.item()
             if (cr_val < min_loss_val):
                 min_loss_val = cr_val
-                torch.sgt = val_data[it]
-                    pred = model(inp)
-                    loss =ave(model.state_dict(),save_path+str(epoch))
+                if not os.path.exists(save_dir):
+                    os.makedirs(save_dir)
+                save_path = os.path.join(save_dir, '{}.pth'.format(epoch))
+                torch.save(model.state_dict(), save_path)
                 
 # EPOCHS = 2000
 
