@@ -10,6 +10,7 @@ import torch.optim as optim
 from torchvision import transforms
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
+from Options import options
 
 # EPOCHS = 2000
 def train(args):
@@ -19,7 +20,7 @@ def train(args):
     train_data = URISC(path, mode='train', augmentation=True)
     val_data = URISC(path, mode='val')
     model = U_Net.U_Net(output_ch=1)
-    model = model.cuda(device=args.device_num) # 0
+    model = model.cuda(device=args.device) # 0
     criterion = loss.dice_loss()
     optimizer = optim.Adam(model.parameters(),lr=args.lr) # 1e-4
     iters = len(train_data)
@@ -35,12 +36,13 @@ def train(args):
             # import ipdb;ipdb.set_trace()
             # TODO: Adapt input to U-net.
             pred = model(inp)
-            loss = criterion(pred, gt)
+            gt_cropped=transforms.CenterCrop(pred.detach().shape[-2:])(gt)
+            loss = criterion(pred, gt_cropped)
             loss.backward()
             optimizer.step()
-            cr_loss += loss.detach()
+            cr_loss += loss.item()
             
-        writer.add_scalar('loss',cr_loss,epoch)
+        writer.add_scalar('loss', cr_loss, epoch)
         
         save_epoch = args.save_epoch
         
@@ -48,13 +50,13 @@ def train(args):
             cr_val = 0
             with torch.no_grad():
                 for it in range(len(val_data)):
-                    inp, gt = val_data[it]
-                    pred = model(inp)
-                    loss = criterion(pred, gt)
-                    cr_val += loss
+                    inp,  criterion(pred, gt)
+                    cr_val += loss.item()
             if (cr_val < min_loss_val):
                 min_loss_val = cr_val
-                torch.save(model.state_dict(),save_path+str(epoch))
+                torch.sgt = val_data[it]
+                    pred = model(inp)
+                    loss =ave(model.state_dict(),save_path+str(epoch))
                 
 # EPOCHS = 2000
 
@@ -98,6 +100,6 @@ def train(args):
 #         for it in range(len(val_data)):
 #             inp, gt = val_data[it]
 
-if __main__ == "__name__":
-    args = 
+if __name__ == "__main__":
+    args = options.BaseOpts().parse()
     train(args)

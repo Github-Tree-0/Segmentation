@@ -7,25 +7,29 @@ from torch.utils.data import Dataset
 from augment import strong_aug
 from utils.img_tool import *
 
-MAC_SIZE = 2200
-TRAIN_SHAPE = [(MAC_SIZE, MAC_SIZE), (MAC_SIZE, MAC_SIZE)]
-VALID_SHAPE = [(MAC_SIZE, MAC_SIZE), (MAC_SIZE, MAC_SIZE)]
+# MAC_SIZE = 2200
+# TRAIN_SHAPE = [(MAC_SIZE, MAC_SIZE), (MAC_SIZE, MAC_SIZE)]
+# VALID_SHAPE = [(MAC_SIZE, MAC_SIZE), (MAC_SIZE, MAC_SIZE)]
 
 class URISC(Dataset):
-    def __init__(self, args, mode="train"):
+    def __init__(self, args, mode="train", transform=None):
         super(URISC, self).__init__()
         self.path = args.path
         self.mode = mode
-        self.transform = args.transform # None
+        self.transform = transform
         self.crop_size = args.crop_size # 960
         self.augmentation = args.augmentation # False
-        self.filenames = [os.path.join(path, mode, filename) for filename in os.listdir(os.path.join(path, mode))]
-        self.device = args.device_num
-
+        self.filenames = [os.path.join(self.path, mode, filename) for filename in os.listdir(os.path.join(self.path, mode))]
+        self.device = args.device
+        self.mac_size = args.mac_size
+        self.train_shape = [(self.mac_size, self.mac_size), (self.mac_size, self.mac_size)]
+        self.val_shape = [(self.mac_size, self.mac_size), (self.mac_size, self.mac_size)]
+        self.batch_size = args.batch_size
+        
     def __len__(self):
         return len(self.filenames)
 
-    def __getitem__(self, item, count=1):
+    def __getitem__(self, item):
         im = image_read(self.filenames[item])
         if self.mode == "test":
             if self.transform is not None:
@@ -40,8 +44,8 @@ class URISC(Dataset):
 
         if self.augmentation:
             image, label = [], []
-            for _ in range(count):
-                p = strong_aug(p=.8, crop_size = TRAIN_SHAPE[0])
+            for _ in range(self.batch_size):
+                p = strong_aug(p=.8, crop_size=self.train_shape[0])
                 res = p(image=np.array(im),mask=np.array(lab))
                 image.append(res['image'].transpose((2, 0, 1)))
                 label.append(res['mask'].transpose((2, 0, 1)))
@@ -50,6 +54,8 @@ class URISC(Dataset):
         if self.transform is not None:
             # convert Image to torch, normalize pixel intensity from [0, 255] to [0, 1]
             image = self.transform(image)
+        
+        image = self.__image_transform(image)
         label = self.__mask_transform(label)
 
         if random.random() < 0.5:
@@ -61,12 +67,20 @@ class URISC(Dataset):
         y = random.randint(0, h - self.crop_size)
         image = image[:,[0], y:y+self.crop_size, x:x+self.crop_size]
         label = label[:,[0], y:y+self.crop_size, x:x+self.crop_size]
+        
+        image = image.cuda(device=self.device)
+        label = label.cuda(device=self.device)
+        
         return image, label
 
     def __mask_transform(self, mask):
         mask = torch.from_numpy(np.array(mask)).float()
         mask[mask == 255] = 1.0
         return mask
-
+    
+    def __image_transform(self, images):
+        images = torch.from_numpy(np.array(images)).float()
+        return images
+        
     def __len__(self):
         return len(self.filenames)
