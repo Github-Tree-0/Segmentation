@@ -4,7 +4,7 @@ import os
 import cv2
 import torch
 import Loss
-from datasets import URISC
+from dataloader.dataloader import Dataloader
 from models import U_Net
 import torch.optim as optim
 from torchvision import transforms
@@ -17,21 +17,21 @@ def train(args):
     writer = SummaryWriter(args.log_dir) # '../log/'
     save_dir = args.save_dir # '../checkpoints/'
     path = args.path # '../data/complex/'
-    train_data = URISC(args, mode='train')
-    val_data = URISC(args, mode='val')
+#     train_data = URISC(args, mode='train')
+#     val_data = URISC(args, mode='val')
+    train_loader, val_loader = Dataloader(args)
     model = U_Net.U_Net(output_ch=1)
     model = model.cuda(device=args.device) # 0
     criterion = Loss.dice_loss()
     optimizer = optim.Adam(model.parameters(),lr=args.lr) # 1e-4
-    iters = len(train_data)
     min_loss_val = args.min_loss_val # 1e9
     epochs = args.epochs # 2000
     
     for epoch in tqdm(range(epochs)):
         
         cr_loss = 0
-        for it in range(iters):
-            inp, gt = train_data[it]
+        for i, sample in enumerate(train_loader):
+            inp, gt = sample
             optimizer.zero_grad()
             # import ipdb;ipdb.set_trace()
             # TODO: Adapt input to U-net.
@@ -49,8 +49,8 @@ def train(args):
         if epoch % save_epoch == 0: # validation
             cr_val = 0
             with torch.no_grad():
-                for it in range(len(val_data)):
-                    inp, gt = val_data[it]
+                for i, sample in enumerate(val_loader):
+                    inp, gt = sample
                     pred = model(inp)
                     gt_cropped=transforms.CenterCrop(pred.detach().shape[-2:])(gt)
                     loss = criterion(pred, gt_cropped)
@@ -105,5 +105,6 @@ def train(args):
 #             inp, gt = val_data[it]
 
 if __name__ == "__main__":
+    torch.multiprocessing.set_start_method('spawn', force=True)
     args = options.BaseOpts().parse()
     train(args)

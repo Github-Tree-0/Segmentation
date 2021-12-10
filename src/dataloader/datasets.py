@@ -43,8 +43,8 @@ class URISC(Dataset):
         if self.mode == "val":
             if self.transform is not None:
                 im = self.transform(im)
-            image = np.array([im.transpose((2, 0, 1))])
-            label = np.array([lab.transpose((2, 0, 1))])
+            image = im.transpose((2, 0, 1))
+            label = lab.transpose((2, 0, 1))
             
             image = self.__image_transform(image)
             label = self.__mask_transform(label)
@@ -53,8 +53,8 @@ class URISC(Dataset):
             h, w = image.shape[-2], image.shape[-1]
             x = random.randint(0, w - self.crop_size)
             y = random.randint(0, h - self.crop_size)
-            image = image[:,[0], y:y+self.crop_size, x:x+self.crop_size]
-            label = label[:,[0], y:y+self.crop_size, x:x+self.crop_size]
+            image = image[[0], y:y+self.crop_size, x:x+self.crop_size]
+            label = label[[0], y:y+self.crop_size, x:x+self.crop_size]
 
             image = image.cuda(device=self.device)
             label = label.cuda(device=self.device)
@@ -64,16 +64,13 @@ class URISC(Dataset):
         
         if self.mode == "train":
             if self.augmentation:
-                image, label = [], []
-                for _ in range(self.repeat):
-                    p = strong_aug(p=.8, crop_size=self.train_shape[0])
-                    res = p(image=np.array(im),mask=np.array(lab))
-                    image.append(res['image'].transpose((2, 0, 1)))
-                    label.append(res['mask'].transpose((2, 0, 1)))
-                image = np.array(image);label=np.array(label)
+                p = strong_aug(p=.8, crop_size=self.train_shape[0])
+                res = p(image=np.array(im),mask=np.array(lab))
+                image = res['image'].transpose((2, 0, 1))
+                label = res['mask'].transpose((2, 0, 1))
             else:
-                image = np.array([im.transpose((2, 0, 1))])
-                label = np.array([lab.transpose((2, 0, 1))])
+                image = im.transpose((2, 0, 1))
+                label = lab.transpose((2, 0, 1))
 
             if self.transform is not None:
                 # convert Image to torch, normalize pixel intensity from [0, 255] to [0, 1]
@@ -89,8 +86,8 @@ class URISC(Dataset):
             h, w = image.shape[-2], image.shape[-1]
             x = random.randint(0, w - self.crop_size)
             y = random.randint(0, h - self.crop_size)
-            image = image[:,[0], y:y+self.crop_size, x:x+self.crop_size]
-            label = label[:,[0], y:y+self.crop_size, x:x+self.crop_size]
+            image = image[[0], y:y+self.crop_size, x:x+self.crop_size]
+            label = label[[0], y:y+self.crop_size, x:x+self.crop_size]
 
             image = image.cuda(device=self.device)
             label = label.cuda(device=self.device)

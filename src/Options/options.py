@@ -18,7 +18,12 @@ class BaseOpts(object):
         self.parser.add_argument('--crop_size',     default=960,    type=int)
         self.parser.add_argument('--augmentation',  default=False,  action='store_true')
         self.parser.add_argument('--mac_size',      default=2200,   type=int)
-        self.parser.add_argument('--repeat',    default=1,      type=int)
+        self.parser.add_argument('--repeat',        default=1,      type=int)
+        
+        #### Dataloader ####
+        self.parser.add_argument('--batch_size',    default=1,      type=int)
+        self.parser.add_argument('--val_batch',     default=1,      type=int)
+        self.parser.add_argument('--workers',       default=12,     type=int)
 
     def parse(self):
         self.args = self.parser.parse_args()
