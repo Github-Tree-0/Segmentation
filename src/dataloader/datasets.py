@@ -26,7 +26,7 @@ class URISC(Dataset):
         for dirname in os.listdir(tempdir1):
             tempdir2=os.path.join(tempdir1, dirname)
             for filename in os.listdir(tempdir2):
-                if filename[-4:].lower() == '.jpg':
+                if filename[-5:].lower() == 'i.npy':
                     self.filenames.append(os.path.join(tempdir2,filename))
         # self.filenames = [os.path.join(self.path, mode, filename) for filename in os.listdir(os.path.join(self.path, mode))]
         self.device = args.device
@@ -39,10 +39,12 @@ class URISC(Dataset):
         return len(self.filenames)
 
     def __getitem__(self, item):
-        im = image_read(self.filenames[item])
-        label_path = self.filenames[item][:-4] + '.png'
+        im = np.load(self.filenames[item])
+        im = np.expand_dims(im, -1)
+        label_path = self.filenames[item][:-5] + 'M.npy'
         # label_path = re.sub(r'(complex/)', r'\1label/', self.filenames[item])
-        lab = image_read(label_path)
+        lab = np.load(label_path)
+        lab = np.expand_dims(lab, -1)
         
         if self.mode == "test":
             if self.transform is not None:

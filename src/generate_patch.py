@@ -76,8 +76,8 @@ def generate_patch(image_path, mask_path,
         patch_msk = raw_msk[i[0]:i[1], i[2]:i[3], 0]
         
         save_name = "{}_{}_{}_{}".format(str(i[0]), str(i[1]), str(i[2]), str(i[3]))
-        cv2.imwrite(os.path.join(save_path, save_name+".png"), patch_img,[cv2.IMWRITE_PNG_COMPRESSION, 0])
-        cv2.imwrite(os.path.join(save_path, save_name+".jpg"), patch_msk,[cv2.IMWRITE_JPEG_QUALITY, 100])
+        np.save(os.path.join(save_path, save_name+"_I.npy"), patch_img)
+        np.save(os.path.join(save_path, save_name+"_M.npy"), patch_msk)
 
 
 
