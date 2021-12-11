@@ -18,7 +18,7 @@ class BaseOpts(object):
         #### Dataset ####
         self.parser.add_argument('--crop_size',     default=960,    type=int)
         self.parser.add_argument('--augmentation',  default=False,  action='store_true')
-        self.parser.add_argument('--mac_size',      default=2200,   type=int)
+        self.parser.add_argument('--mac_size',      default=1024,   type=int)
         self.parser.add_argument('--repeat',        default=1,      type=int)
         
         #### Dataloader ####

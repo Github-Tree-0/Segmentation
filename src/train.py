@@ -45,7 +45,7 @@ def train(args):
         print("EPOCH:",epoch)
         cr_loss = 0
         for i, sample in tqdm(enumerate(train_loader)):
-            inp, gt = [_.to(args.device) for _ in sample]
+            inp, gt = sample
             optimizer.zero_grad()
             # import ipdb;ipdb.set_trace()
             # TODO: Adapt input to U-net.
