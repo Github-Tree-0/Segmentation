@@ -48,7 +48,5 @@ def strong_aug(p=0.5, crop_size=(512, 512)):
             RandomShadow(p=0.2, num_shadows_lower=1, num_shadows_upper=1,
                         shadow_dimension=5, shadow_roi=(0, 0.5, 1, 1)),
             RandomFog(p=0.5, fog_coef_lower=0.3, fog_coef_upper=0.5, alpha_coef=0.1)
-        ], p=0.3),
-        RGBShift(),
-        HueSaturationValue(p=0.9),],p=p)
+        ], p=0.3),],p=p)
     ], p=1)

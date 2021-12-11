@@ -29,14 +29,15 @@ def train(args):
 
     checkpoint = None
     if args.use_save:
-        weight_list = [ _[:-4] for _ in os.listdir(args.save_dir)]
-        latest = str(sorted(weight_lists)[-1])+'.pth'
+        weight_list = [ int(_[:-4]) for _ in os.listdir(args.save_dir)]
+        latest = str(sorted(weight_list)[-1])+'.pth'
         print(f'Loaded {latest}')
         checkpoint = torch.load(os.path.join(args.save_dir,latest))
-        model.load(checkpoint['model_state_dict'])
-        optimizer.load(checkpoint['optimizer_state_dict'])
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
-    print("iters per epoch:",len(train_loader))
+    iters_per_epoch = len(train_loader)
+    print("iters per epoch:",iters_per_epoch)
     for epoch in range(epochs):
         if (checkpoint):
             epoch = checkpoint['epoch']
@@ -54,8 +55,11 @@ def train(args):
             loss.backward()
             optimizer.step()
             cr_loss += loss.item()
-            
-        writer.add_scalar('loss', cr_loss, epoch)
+            writer.add_scalar('loss', loss.item(),iters_per_epoch*epoch+i)
+            if i % 50 == 0:
+                inp_cropped = transforms.CenterCrop(pred.detach().shape[-2:])(inp)
+                writer.add_images('train_batch', torch.stack((inp_cropped[0],pred[0],gt_cropped[0])), iters_per_epoch*epoch+i,dataformats='NCHW')
+        writer.add_scalar('batch_loss', cr_loss, epoch)
         
         save_epoch = args.save_epoch
         
