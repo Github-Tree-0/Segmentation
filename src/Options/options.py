@@ -13,6 +13,7 @@ class BaseOpts(object):
         self.parser.add_argument('--min_loss_val',  default=1e9,    type=float)
         self.parser.add_argument('--epochs',        default=2000,   type=int)
         self.parser.add_argument('--save_epoch',    default=30,     type=int)
+        self.parser.add_argument('--use_save',      default=False,  action='store_true')
         
         #### Dataset ####
         self.parser.add_argument('--crop_size',     default=960,    type=int)

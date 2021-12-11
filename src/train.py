@@ -26,12 +26,25 @@ def train(args):
     optimizer = optim.Adam(model.parameters(),lr=args.lr) # 1e-4
     min_loss_val = args.min_loss_val # 1e9
     epochs = args.epochs # 2000
-    
+
+    checkpoint = None
+    if args.use_save:
+        weight_list = [ _[:-4] for _ in os.listdir(args.save_dir)]
+        latest = str(sorted(weight_lists)[-1])+'.pth'
+        print(f'Loaded {latest}')
+        checkpoint = torch.load(os.path.join(args.save_dir,latest))
+        model.load(checkpoint['model_state_dict'])
+        optimizer.load(checkpoint['optimizer_state_dict'])
+
+    print("iters per epoch:",len(train_loader))
     for epoch in range(epochs):
+        if (checkpoint):
+            epoch = checkpoint['epoch']
+            min_loss_val = checkpoint['min_loss_val']
         print("EPOCH:",epoch)
         cr_loss = 0
         for i, sample in tqdm(enumerate(train_loader)):
-            inp, gt = sample
+            inp, gt = [_.to(args.device) for _ in sample]
             optimizer.zero_grad()
             # import ipdb;ipdb.set_trace()
             # TODO: Adapt input to U-net.
@@ -57,10 +70,14 @@ def train(args):
                     cr_val += loss.item()
             if (cr_val < min_loss_val):
                 min_loss_val = cr_val
+                print(f'Updated min_loss_val:{min_loss_val}')
                 if not os.path.exists(save_dir):
                     os.makedirs(save_dir)
                 save_path = os.path.join(save_dir, '{}.pth'.format(epoch))
-                torch.save(model.state_dict(), save_path)
+                torch.save({'epoch': epoch,
+                            'model_state_dict':model.state_dict(),
+                            'optimizer_state_dict': optimizer.state_dict(),
+                            'min_loss_val': cr_val}, save_path)
                 
 # EPOCHS = 2000
 
