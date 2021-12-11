@@ -20,7 +20,15 @@ class URISC(Dataset):
         self.transform = transform
         self.crop_size = args.crop_size # 960
         self.augmentation = args.augmentation # False
-        self.filenames = [os.path.join(self.path, mode, filename) for filename in os.listdir(os.path.join(self.path, mode))]
+        self.filenames = []
+        # PATCHS
+        tempdir1 = os.path.join(self.path, mode)
+        for dirname in os.listdir(tempdir1):
+            tempdir2=os.path.join(tempdir1, dirname)
+            for filename in os.listdir(tempdir2):
+                if filename[-4:].lower() == '.jpg':
+                    self.filenames.append(os.path.join(tempdir2,filename))
+        # self.filenames = [os.path.join(self.path, mode, filename) for filename in os.listdir(os.path.join(self.path, mode))]
         self.device = args.device
         self.mac_size = args.mac_size
         self.train_shape = [(self.mac_size, self.mac_size), (self.mac_size, self.mac_size)]
@@ -32,7 +40,8 @@ class URISC(Dataset):
 
     def __getitem__(self, item):
         im = image_read(self.filenames[item])
-        label_path = re.sub(r'(complex/)', r'\1label/', self.filenames[item])
+        label_path = self.filenames[item][:-4] + '.png'
+        # label_path = re.sub(r'(complex/)', r'\1label/', self.filenames[item])
         lab = image_read(label_path)
         
         if self.mode == "test":

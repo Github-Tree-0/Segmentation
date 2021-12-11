@@ -27,10 +27,10 @@ def train(args):
     min_loss_val = args.min_loss_val # 1e9
     epochs = args.epochs # 2000
     
-    for epoch in tqdm(range(epochs)):
-        
+    for epoch in range(epochs):
+        print("EPOCH:",epoch)
         cr_loss = 0
-        for i, sample in enumerate(train_loader):
+        for i, sample in tqdm(enumerate(train_loader)):
             inp, gt = sample
             optimizer.zero_grad()
             # import ipdb;ipdb.set_trace()

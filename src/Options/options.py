@@ -6,7 +6,7 @@ class BaseOpts(object):
     def __init__(self):
         self.parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
         self.parser.add_argument('--save_dir',      default='../checkpoints/')
-        self.parser.add_argument('--path',          default='../data/complex/')
+        self.parser.add_argument('--path',          default='../data/')
         self.parser.add_argument('--log_dir',       default='../log/')
         self.parser.add_argument('--device',        default=0,      type=int)
         self.parser.add_argument('--lr',            default=1e-4,   type=float)
