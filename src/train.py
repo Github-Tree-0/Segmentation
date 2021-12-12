@@ -59,8 +59,6 @@ def train(args):
             if i % 50 == 0:
                 writer.add_scalar('batch_loss', cr_loss, epoch*iters_per_epoch+i)
                 cr_loss = 0
-                inp_cropped = transforms.CenterCrop(pred.detach().shape[-2:])(inp)
-                writer.add_images('train_batch', torch.stack((inp_cropped[0],pred[0],gt_cropped[0])), iters_per_epoch*epoch+i,dataformats='NCHW')
 
         if epoch % save_epoch == 0: # validation
             cr_val = 0
@@ -71,6 +69,8 @@ def train(args):
                     gt_cropped=transforms.CenterCrop(pred.detach().shape[-2:])(gt)
                     loss = criterion(pred, gt_cropped)
                     cr_val += loss.item()
+                inp_cropped = transforms.CenterCrop(pred.detach().shape[-2:])(inp)
+                writer.add_images('validation batch', torch.stack((inp_cropped[0],pred[0],gt_cropped[0])), epoch,dataformats='NCHW')
                 writer.add_scalar('Validation loss', cr_val,epoch)
             if (cr_val < min_loss_val):
                 min_loss_val = cr_val

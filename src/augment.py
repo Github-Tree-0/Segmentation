@@ -14,7 +14,7 @@ from albumentations import (
 
 def strong_aug(p=0.5, crop_size=(512, 512)):
     return Compose([
-        RandomResizedCrop(crop_size[0], crop_size[1], scale=(0.3, 1.0), ratio=(0.75, 1.3), interpolation=4, p=0.8),
+        # RandomResizedCrop(crop_size[0], crop_size[1], scale=(0.3, 1.0), ratio=(0.75, 1.3), interpolation=4, p=0.8),
         RandomRotate90(),
         Flip(),
         Transpose(),

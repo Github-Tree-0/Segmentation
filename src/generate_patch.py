@@ -80,11 +80,16 @@ def generate_patch(image_path, mask_path,
         np.save(os.path.join(save_path, save_name+"_M.npy"), patch_msk)
 
 
-
+import argparse
 if __name__ == "__main__":
-    crop_size=(1024, 1024)
-    steps=(512, 512)
-    save_root = "../patchs/crop1024/"
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--save_dir',default='../patchs/')
+    parser.add_argument('--size',default=2048,type=int)
+    args=parser.parse_args()
+    SIZE=args.size
+    crop_size=(SIZE, SIZE)
+    steps=(SIZE//2, SIZE//2)
+    save_root = os.path.join(args.save_dir, "crop" + str(SIZE)+'/')
     
     def train_run(img_path):
         train_save_dir = os.path.join(save_root, "train")
