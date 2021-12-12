@@ -14,9 +14,14 @@ from Options import options
 
 # EPOCHS = 2000
 def train(args):
-    writer = SummaryWriter(args.log_dir) # '../log/'
-    save_dir = args.save_dir # '../checkpoints/'
-    path = args.path # '../data/complex/'
+    log_path = os.path.join(args.log_dir, args.save_name)
+    while os.path.exists(log_path):
+        log_path += '_'
+    os.makedirs(log_path)
+    writer = SummaryWriter(log_path) # '../log/'
+    save_dir = os.path.join(args.save_dir, args.save_name) # '../checkpoints/'
+    while os.path.exists(save_dir):
+        save_dir += '_'
 #     train_data = URISC(args, mode='train')
 #     val_data = URISC(args, mode='val')
     train_loader, val_loader = Dataloader(args)
@@ -30,10 +35,10 @@ def train(args):
 
     checkpoint = None
     if args.use_save:
-        weight_list = [ int(_[:-4]) for _ in os.listdir(args.save_dir)]
+        weight_list = [ int(_[:-4]) for _ in os.listdir(args.load_dir)]
         latest = str(sorted(weight_list)[-1])+'.pth'
         print(f'Loaded {latest}')
-        checkpoint = torch.load(os.path.join(args.save_dir,latest))
+        checkpoint = torch.load(os.path.join(args.load_dir, latest))
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
