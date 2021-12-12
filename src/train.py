@@ -50,7 +50,7 @@ def train(args):
             optimizer.zero_grad()
             # import ipdb;ipdb.set_trace()
             # TODO: Adapt input to U-net.
-            pred = model(inp)
+            pred = torch.sigmoid(model(inp))
             gt_cropped = transforms.CenterCrop(pred.detach().shape[-2:])(gt)
             loss = criterion(pred, gt_cropped)
             loss.backward()
@@ -67,7 +67,7 @@ def train(args):
             with torch.no_grad():
                 for i, sample in enumerate(val_loader):
                     inp, gt = sample
-                    pred = model(inp)
+                    pred = torch.sigmoid(model(inp))
                     gt_cropped=transforms.CenterCrop(pred.detach().shape[-2:])(gt)
                     loss = criterion(pred, gt_cropped)
                     cr_val += loss.item()

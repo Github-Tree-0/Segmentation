@@ -90,8 +90,8 @@ class URISC(Dataset):
             image = self.__image_transform(image)
             label = self.__mask_transform(label)
 
-            if random.random() < 0.5:
-                image = image * random.uniform(0.9, 1.1)
+            # if random.random() < 0.5: # WHAT THE HECK IS THIS?
+            #     image = image * random.uniform(0.9, 1.1)
 
             # cropping
             h, w = image.shape[-2], image.shape[-1]
@@ -106,12 +106,13 @@ class URISC(Dataset):
             return image, label
 
     def __mask_transform(self, mask):
-        mask = torch.from_numpy(np.array(mask)).float()
-        mask[mask == 255] = 1.0
+        mask = torch.from_numpy(np.array(mask)).float()/255.
+        mask[mask > 0.5] = 1.
+        mask[mask <= 0.5] = 0.
         return mask
     
     def __image_transform(self, images):
-        images = torch.from_numpy(np.array(images)).float()
+        images = torch.from_numpy(np.array(images)).float()/255.
         return images
         
     def __len__(self):
