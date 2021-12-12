@@ -26,6 +26,7 @@ def train(args):
     optimizer = optim.Adam(model.parameters(),lr=args.lr) # 1e-4
     min_loss_val = args.min_loss_val # 1e9
     epochs = args.epochs # 2000
+    save_epoch = args.save_epoch
 
     checkpoint = None
     if args.use_save:
@@ -55,14 +56,12 @@ def train(args):
             loss.backward()
             optimizer.step()
             cr_loss += loss.item()
-            writer.add_scalar('loss', loss.item(),iters_per_epoch*epoch+i)
             if i % 50 == 0:
+                writer.add_scalar('batch_loss', cr_loss, epoch*iters_per_epoch+i)
+                cr_loss = 0
                 inp_cropped = transforms.CenterCrop(pred.detach().shape[-2:])(inp)
                 writer.add_images('train_batch', torch.stack((inp_cropped[0],pred[0],gt_cropped[0])), iters_per_epoch*epoch+i,dataformats='NCHW')
-        writer.add_scalar('batch_loss', cr_loss, epoch)
-        
-        save_epoch = args.save_epoch
-        
+
         if epoch % save_epoch == 0: # validation
             cr_val = 0
             with torch.no_grad():
@@ -72,6 +71,7 @@ def train(args):
                     gt_cropped=transforms.CenterCrop(pred.detach().shape[-2:])(gt)
                     loss = criterion(pred, gt_cropped)
                     cr_val += loss.item()
+                writer.add_scalar('Validation loss', cr_val,epoch)
             if (cr_val < min_loss_val):
                 min_loss_val = cr_val
                 print(f'Updated min_loss_val:{min_loss_val}')
