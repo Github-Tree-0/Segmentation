@@ -1,5 +1,7 @@
 import torch
 import torch.nn as nn
+from torchvision import transforms
+
 from .utils import conv_block, up_conv, Attention_block
 
 class AttU_Net(nn.Module):
@@ -51,21 +53,29 @@ class AttU_Net(nn.Module):
 
         # decoding + concat path
         d5 = self.Up5(x5)
+        size = d5.shape[-2:]
+        x4 = transforms.CenterCrop(size)(x4)
         x4 = self.Att5(g=d5,x=x4)
-        d5 = torch.cat((x4,d5),dim=1)        
+        d5 = torch.cat((x4,d5),dim=1)
         d5 = self.Up_conv5(d5)
         
         d4 = self.Up4(d5)
+        size = d4.shape[-2:]
+        x3 = transforms.CenterCrop(size)(x3)
         x3 = self.Att4(g=d4,x=x3)
         d4 = torch.cat((x3,d4),dim=1)
         d4 = self.Up_conv4(d4)
 
         d3 = self.Up3(d4)
+        size = d3.shape[-2:]
+        x2 = transforms.CenterCrop(size)(x2)
         x2 = self.Att3(g=d3,x=x2)
         d3 = torch.cat((x2,d3),dim=1)
         d3 = self.Up_conv3(d3)
 
         d2 = self.Up2(d3)
+        size = d2.shape[-2:]
+        x1 = transforms.CenterCrop(size)(x1)
         x1 = self.Att2(g=d2,x=x1)
         d2 = torch.cat((x1,d2),dim=1)
         d2 = self.Up_conv2(d2)
