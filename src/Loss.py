@@ -50,24 +50,25 @@ class fscore_loss(nn.Module):
     
 
 class near_edge_loss(nn.Module):
-    def __init__(self, kernel_size=3):
+    def __init__(self,device=0,kernel_size=3):
         super().__init__()
         self.kernel_size = kernel_size
+        self.device = device
         
     def forward(self, predicted, target):
         smoothing_kernel = nn.Conv2d(1, 1, kernel_size=self.kernel_size, stride=1,
-                                     padding=(self.kernel_size-1) // 2, bias=False).cuda()
-        smoothing_kernel.weight.data = torch.ones(self.kernel_size, self.kernel_size).float().unsqueeze(0).unsqueeze(0).cuda() / \
+                                     padding=(self.kernel_size-1) // 2, bias=False).cuda(device=self.device)
+        smoothing_kernel.weight.data = torch.ones(self.kernel_size, self.kernel_size).float().unsqueeze(0).unsqueeze(0).cuda(device=self.device) / \
                                        float(self.kernel_size * self.kernel_size)
         smoothing_kernel.weight.requires_grad = False
         smoothed_target = smoothing_kernel(target)
         smoothed_target[smoothed_target < 0.98] = 0
         smoothed_target[smoothed_target != 0] = 1.0
-        near_edge_target = torch.zeros_like(smoothed_target).cuda().float()
+        near_edge_target = torch.zeros_like(smoothed_target).cuda(device=self.device).float()
         near_edge_target[smoothed_target != target] = 1
 
         predicted = predicted * near_edge_target
-        loss = binary_cross_entropy_loss(predicted, near_edge_target)
+        loss = BCELoss()(predicted, near_edge_target)
 
         return loss
 

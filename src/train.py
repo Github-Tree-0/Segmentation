@@ -27,7 +27,7 @@ def train(args):
     train_loader, val_loader = Dataloader(args)
     model = U_Net.U_Net(output_ch=1,img_ch=1)
     model = model.cuda(device=args.device) # 0
-    criterion = Loss.near_edge_loss()# Loss.dice_loss()
+    criterion = Loss.near_edge_loss(args.device)# Loss.dice_loss()
     val_criterion = Loss.fscore_loss()
     optimizer = optim.Adam(model.parameters(),lr=args.lr) # 1e-4
     min_loss_val = args.min_loss_val # 1e9
