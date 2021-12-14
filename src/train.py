@@ -5,7 +5,7 @@ import cv2
 import torch
 import Loss
 from dataloader.dataloader import Dataloader
-from models import U_Net
+from models import U_Net,AttU_Net
 import torch.optim as optim
 from torchvision import transforms
 from tqdm import tqdm
@@ -25,9 +25,10 @@ def train(args):
 #     train_data = URISC(args, mode='train')
 #     val_data = URISC(args, mode='val')
     train_loader, val_loader = Dataloader(args)
-    model = U_Net.U_Net(output_ch=1)
+    model = U_Net.U_Net(output_ch=1,img_ch=1)
     model = model.cuda(device=args.device) # 0
-    criterion = Loss.dice_loss()
+    criterion = Loss.near_edge_loss()# Loss.dice_loss()
+    val_criterion = Loss.fscore_loss()
     optimizer = optim.Adam(model.parameters(),lr=args.lr) # 1e-4
     min_loss_val = args.min_loss_val # 1e9
     epochs = args.epochs # 2000
@@ -61,7 +62,7 @@ def train(args):
             loss.backward()
             optimizer.step()
             cr_loss += loss.item()
-            if i % 50 == 0:
+            if i % 50 == 49:
                 writer.add_scalar('batch_loss', cr_loss, epoch*iters_per_epoch+i)
                 cr_loss = 0
 
@@ -72,10 +73,10 @@ def train(args):
                     inp, gt = sample
                     pred = torch.sigmoid(model(inp))
                     gt_cropped=transforms.CenterCrop(pred.detach().shape[-2:])(gt)
-                    loss = criterion(pred, gt_cropped)
+                    loss = val_criterion(pred, gt_cropped)
                     cr_val += loss.item()
                 inp_cropped = transforms.CenterCrop(pred.detach().shape[-2:])(inp)
-                writer.add_images('validation batch', torch.stack((inp_cropped[0],pred[0],gt_cropped[0])), epoch,dataformats='NCHW')
+                writer.add_images('validation batch', torch.vstack((inp_cropped,pred,gt_cropped)), epoch,dataformats='NCHW')
                 writer.add_scalar('Validation loss', cr_val,epoch)
             if (cr_val < min_loss_val):
                 min_loss_val = cr_val
