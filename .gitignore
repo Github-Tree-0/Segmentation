@@ -6,3 +6,5 @@ checkpoints/**
 patchs/crop1024/**
 src/__pycache__/**
 src/dataloader/__pycache__/**
+
+*.pyc
