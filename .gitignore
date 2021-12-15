@@ -1,10 +1,10 @@
-data/**/*.png
-data/**/*.jpg
-data/*.zip
-log/**
-checkpoints/**
-patchs/crop1024/**
-src/__pycache__/**
-src/dataloader/__pycache__/**
+/data/**/*.png
+/data/**/*.jpg
+/data/*.zip
+/log/**
+/checkpoints/**
+/patchs/crop1024/**
+/src/__pycache__/**
+/src/dataloader/__pycache__/**
 
 *.pyc

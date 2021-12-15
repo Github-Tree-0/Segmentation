@@ -27,7 +27,8 @@ def train(args):
     train_loader, val_loader = Dataloader(args)
     model = U_Net.U_Net(output_ch=1,img_ch=1)
     model = model.cuda(device=args.device) # 0
-    criterion = Loss.near_edge_loss(args.device)# Loss.dice_loss()
+    nel_crit = Loss.near_edge_loss(args.device)# Loss.dice_loss()
+    bce_crit = Loss.BCELoss()
     val_criterion = Loss.fscore_loss()
     optimizer = optim.Adam(model.parameters(),lr=args.lr) # 1e-4
     min_loss_val = args.min_loss_val # 1e9
@@ -58,7 +59,7 @@ def train(args):
             # TODO: Adapt input to U-net.
             pred = torch.sigmoid(model(inp))
             gt_cropped = transforms.CenterCrop(pred.detach().shape[-2:])(gt)
-            loss = criterion(pred, gt_cropped)
+            loss = nel_crit(pred, gt_cropped) + val_criterion(pred,gt_cropped) + bce_crit(pred,gt_cropped)
             loss.backward()
             optimizer.step()
             cr_loss += loss.item()
