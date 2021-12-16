@@ -5,9 +5,10 @@ import torch
 class BaseOpts(object):
     def __init__(self):
         self.parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        #### Train ####
         self.parser.add_argument('--save_dir',      default='../checkpoints/defualt/')
         self.parser.add_argument('--load_dir',      default='../checkpoints/')
-        self.parser.add_argument('--save_name',    default='defualt')
+        self.parser.add_argument('--save_name',     default='defualt')
         self.parser.add_argument('--path',          default='../data/')
         self.parser.add_argument('--log_dir',       default='../log/')
         self.parser.add_argument('--device',        default=0,      type=int)
@@ -25,9 +26,16 @@ class BaseOpts(object):
         
         #### Dataloader ####
         self.parser.add_argument('--batch_size',    default=1,      type=int)
+        self.parser.add_argument('--test_batch',    default=1,      type=int)
         self.parser.add_argument('--val_batch',     default=1,      type=int)
         self.parser.add_argument('--workers',       default=12,     type=int)
-
+        
+        #### test ####
+        self.parser.add_argument('--test_save_dir', default='../test_results')
+        self.parser.add_argument('--test_crop',     default=1180,   type=int)
+        self.parser.add_argument('--out_size',      default=996,    type=int)
+        self.parser.add_argument('--pad',           default=184,    type=int)
+        
     def parse(self):
         self.args = self.parser.parse_args()
         return self.args

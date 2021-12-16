@@ -39,17 +39,17 @@ class URISC(Dataset):
         return len(self.filenames)
 
     def __getitem__(self, item):
+        if self.mode == "test":
+            im = np.load(self.filenames[item]) / 255.
+            im = im.transpose((2, 0, 1))[[0]]
+            return self.filenames[item], im
+        
         im = np.load(self.filenames[item])
         im = np.expand_dims(im, -1)
         label_path = self.filenames[item][:-5] + 'M.npy'
         # label_path = re.sub(r'(complex/)', r'\1label/', self.filenames[item])
         lab = np.load(label_path)
         lab = np.expand_dims(lab, -1)
-        
-        if self.mode == "test":
-            if self.transform is not None:
-                im = self.transform(im)
-            return self.filenames[item], im.unsqueeze(0)
         
         if self.mode == "val":
             if self.transform is not None:

@@ -15,3 +15,9 @@ def Dataloader(args, transform=None):
     
     return train_loader, val_loader
 
+def test_Dataloader(args):
+    test_set = URISC(args, mode='test')
+    test_loader = torch.utils.data.Dataloader(test_set, batch_size=args.test_batch, num_workers=args.workers, pin_memory=False, shuffle=False)
+    
+    return test_loader
+    
