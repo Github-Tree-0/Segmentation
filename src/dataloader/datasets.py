@@ -39,11 +39,6 @@ class URISC(Dataset):
         return len(self.filenames)
 
     def __getitem__(self, item):
-        if self.mode == "test":
-            im = np.load(self.filenames[item]) / 255.
-            im = im.transpose((2, 0, 1))[[0]]
-            return self.filenames[item], im
-        
         im = np.load(self.filenames[item])
         im = np.expand_dims(im, -1)
         label_path = self.filenames[item][:-5] + 'M.npy'
@@ -90,9 +85,6 @@ class URISC(Dataset):
             image = self.__image_transform(image)
             label = self.__mask_transform(label)
 
-            # if random.random() < 0.5: # WHAT THE HECK IS THIS?
-            #     image = image * random.uniform(0.9, 1.1)
-
             # cropping
             h, w = image.shape[-2], image.shape[-1]
             x = random.randint(0, w - self.crop_size)
@@ -114,6 +106,38 @@ class URISC(Dataset):
     def __image_transform(self, images):
         images = torch.from_numpy(np.array(images)).float()/255.
         return images
+
+class inference_URISC(Dataset):
+    def __init__(self, args, mode='test',transform=None):
+        super(inference_URISC, self).__init__()
+        self.path = args.path
+        self.transform = transform
+        self.filenames = []
+        self.pathnames = []
+        tempdir1 = os.path.join(self.path, mode)
+        for filename in os.listdir(tempdir1):
+            if filename[-4:].lower()=='.png':
+                self.pathnames.append(os.path.join(tempdir1,filename))
+                self.filenames.append(filename)
+        self.device = args.device
+        self.repeat = args.repeat
         
     def __len__(self):
         return len(self.filenames)
+
+    def __getitem__(self, item):
+        im = (image_read(self.pathnames[item]).copy()).astype('float32')
+        im /= 255.
+        # im = np.load(self.filenames[item]) / 255.
+        im = im.transpose((2, 0, 1))[0]
+        return self.filenames[item],im
+
+    def __mask_transform(self, mask):
+        mask = torch.from_numpy(np.array(mask)).float()/255.
+        mask[mask > 0.5] = 1.
+        mask[mask <= 0.5] = 0.
+        return mask
+    
+    def __image_transform(self, images):
+        images = torch.from_numpy(np.array(images)).float()/255.
+        return images

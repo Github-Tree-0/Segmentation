@@ -2,8 +2,8 @@ import numpy as np
 import torch
 import os
 import cv2
-import tqdm
-import Loss
+from Options import options
+from tqdm import tqdm
 from dataloader.dataloader import test_Dataloader
 from models import U_Net, AttU_Net, Link_U_Net
 
@@ -42,42 +42,45 @@ class cutter():
                 l = self.out_size * j
                 r = min(l + self.out_size, self.shape[1])
                 d = min(u + self.out_size, self.shape[0])
-                image[u:d, l:r] = imgs[index][self.pad:self.pad+d-u,self.pad:self.pad+r-l]
-        
+                # image[u:d, l:r] = imgs[index][self.pad:self.pad+d-u,self.pad:self.pad+r-l]
+                image[u:d, l:r] = imgs[index][0:d-u,0:r-l]
         return image
 
 def test(args):
     test_save_dir = args.test_save_dir # Modify this idiot
     test_loader = test_Dataloader(args) # Modify datasets.py
-    
-    model = U_Net.U_Net(output_ch=1, img_ch=1)
+    os.makedirs(os.path.join(test_save_dir,args.save_name), exist_ok=True)
+    # model = U_Net.U_Net(output_ch=1, img_ch=1)
+    model = AttU_Net.AttU_Net(img_ch=1,output_ch=1)
     model = model.cuda(device=args.device)
-    
-    weight_list = [ int(_[:-4]) for _ in os.listdir(args.load_dir)]
+    load_dir = os.path.join(args.load_dir,args.save_name)
+    # import ipdb;ipdb.set_trace()
+    weight_list = [ int(_[:-4]) for _ in os.listdir(load_dir)]
     latest = str(sorted(weight_list)[-1])+'.pth'
-    print(f'Loaded {latest}')
-    checkpoint = torch.load(os.path.join(args.load_dir, latest))
+    print(f'Loading {latest}...')
+    checkpoint = torch.load(os.path.join(load_dir, latest))
     model.load_state_dict(checkpoint['model_state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     
     with torch.no_grad():
-        for i, sample in tqdm(enumerate(test_loader)):
-            name, image = sample
-            image = image.detach().numpy().squeeze()
+        for (name, image) in tqdm(test_loader):
+            # import ipdb;ipdb.set_trace()
+            image = image[0];name = name[0]
             image_cutter = cutter(args.out_size, image.shape, args.pad)
             imgs = image_cutter.cut(image)
             preds = []
             print('Testing image {}:'.format(name))
-            for img in tqdm.tqdm(imgs):
-                inp = torch.from_numpy(img[np.newaxis][np.newaxis])
+            for img in tqdm(imgs):
+                inp = torch.from_numpy(img[np.newaxis][np.newaxis]).cuda(args.device)
                 pred = model(inp).cpu().detach().numpy().squeeze()
                 pred[pred<0] = 0
                 pred[pred>0] = 1
                 preds.append(pred)
-            pred_image = image_cutter.stick(preds)
+            pred_image = image_cutter.stick(preds)*255
+            save_path = os.path.join(test_save_dir,args.save_name,name)
+            print(f'Saving {save_path} ...')
+            cv2.imwrite(save_path, pred_image,[cv2.IMWRITE_PNG_COMPRESSION, 0])
             
-            save_path = os.path.join(test_save_dir, name)
-            np.save(save_path, pred_image)
-            
-            
-            
+if __name__ == "__main__":
+    # torch.multiprocessing.set_start_method('spawn', force=True)
+    args = options.BaseOpts().parse()
+    test(args)

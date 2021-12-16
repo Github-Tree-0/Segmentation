@@ -2,9 +2,9 @@ import os
 import numpy as np
 
 import torch
-import torch.utils.data as data
+import torch.utils.data
 
-from .datasets import URISC
+from .datasets import URISC,inference_URISC
 
 def Dataloader(args, transform=None):
     train_set = URISC(args, mode='train', transform=transform)
@@ -16,8 +16,8 @@ def Dataloader(args, transform=None):
     return train_loader, val_loader
 
 def test_Dataloader(args):
-    test_set = URISC(args, mode='test')
-    test_loader = torch.utils.data.Dataloader(test_set, batch_size=args.test_batch, num_workers=args.workers, pin_memory=False, shuffle=False)
+    test_set = inference_URISC(args, mode='test')
+    test_loader = torch.utils.data.DataLoader(test_set, batch_size=args.test_batch, num_workers=args.workers, pin_memory=False, shuffle=False)
     
     return test_loader
     
